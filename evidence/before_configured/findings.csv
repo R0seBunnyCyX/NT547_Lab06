@@ -1,0 +1,6 @@
+﻿index,check,impact,confidence,file,lines,description
+1,controlled-delegatecall,High,Medium,AuditTarget.sol,"54,55,56,57; 55","TipJar_0943.plugin(address,bytes) (AuditTarget.sol#54-57) uses delegatecall to a input-controlled function id 	- (ok,None) = target.delegatecall(data) (AuditTarget.sol#55)"
+2,encode-packed-collision,High,High,AuditTarget.sol,"59,60,61,62,63,64; 60","TipJar_0943.redeemCode(string,string) (AuditTarget.sol#59-64) calls abi.encodePacked() with multiple dynamic arguments: 	- id = keccak256(bytes)(abi.encodePacked(campaign,code)) (AuditTarget.sol#60)"
+3,incorrect-equality,Medium,High,AuditTarget.sol,"37,38,39; 38",TipJar_0943.noFunds() (AuditTarget.sol#37-39) uses a dangerous strict equality: 	- address(this).balance == 0 (AuditTarget.sol#38)
+4,tx-origin,Medium,Medium,AuditTarget.sol,"48,49,50,51,52; 49","TipJar_0943.changeOwner(address) (AuditTarget.sol#48-52) uses tx.origin for authorization: require(bool,string)(tx.origin == owner,not owner) (AuditTarget.sol#49)"
+5,unchecked-lowlevel,Medium,Medium,AuditTarget.sol,"66,67,68,69; 68",TipJar_0943.sweep(address) (AuditTarget.sol#66-69) ignores return value by to.call{value: address(this).balance}() (AuditTarget.sol#68)

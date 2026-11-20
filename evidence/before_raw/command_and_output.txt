@@ -1,0 +1,75 @@
+COMMAND: slither AuditTarget.sol --config-file config/slither.raw.json --fail-none --json evidence\before_raw\slither.json
+SLITHER_VERSION:
+0.11.6
+
+SOLC_VERSION:
+solc, the solidity compiler commandline interface
+Version: 0.8.24+commit.e11b9ed9.Windows.msvc
+
+
+Detector: controlled-delegatecall
+TipJar_0943.plugin(address,bytes) (AuditTarget.sol#54-57) uses delegatecall to a input-controlled function id
+	- (ok,None) = target.delegatecall(data) (AuditTarget.sol#55)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#controlled-delegatecall
+
+Detector: encode-packed-collision
+TipJar_0943.redeemCode(string,string) (AuditTarget.sol#59-64) calls abi.encodePacked() with multiple dynamic arguments:
+	- id = keccak256(bytes)(abi.encodePacked(campaign,code)) (AuditTarget.sol#60)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#abi-encodePacked-collision
+
+Detector: incorrect-equality
+TipJar_0943.noFunds() (AuditTarget.sol#37-39) uses a dangerous strict equality:
+	- address(this).balance == 0 (AuditTarget.sol#38)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Detector: tx-origin
+TipJar_0943.changeOwner(address) (AuditTarget.sol#48-52) uses tx.origin for authorization: require(bool,string)(tx.origin == owner,not owner) (AuditTarget.sol#49)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+Detector: unchecked-lowlevel
+TipJar_0943.sweep(address) (AuditTarget.sol#66-69) ignores return value by to.call{value: address(this).balance}() (AuditTarget.sol#68)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+Detector: missing-zero-check
+TipJar_0943.plugin(address,bytes).target (AuditTarget.sol#54) lacks a zero-check on :
+		- (ok,None) = target.delegatecall(data) (AuditTarget.sol#55)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Detector: timestamp
+TipJar_0943.drip() (AuditTarget.sol#41-46) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= nextRelease,locked) (AuditTarget.sol#42)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: low-level-calls
+Low level call in TipJar_0943.ownerWithdraw(uint256) (AuditTarget.sol#32-35):
+	- (ok,None) = address(owner).call{value: amount}() (AuditTarget.sol#33)
+Low level call in TipJar_0943.drip() (AuditTarget.sol#41-46):
+	- (ok,None) = address(owner).call{value: address(this).balance / 10}() (AuditTarget.sol#44)
+Low level call in TipJar_0943.plugin(address,bytes) (AuditTarget.sol#54-57):
+	- (ok,None) = target.delegatecall(data) (AuditTarget.sol#55)
+Low level call in TipJar_0943.sweep(address) (AuditTarget.sol#66-69):
+	- to.call{value: address(this).balance}() (AuditTarget.sol#68)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Detector: naming-convention
+Contract TipJar_0943 (AuditTarget.sol#10-70) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+AuditTarget.sol analyzed (2 contracts with 102 detectors), 12 result(s) found
+Multiple frameworks detected: solc, Solc-json. Using solc (highest priority). Use --compile-force-framework to override.
+'solc --version' running
+'solc AuditTarget.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,C:\Users\MSI VN\Desktop\Blockchain\Lab06\Lab06_SinhVien' running
+Compilation warnings/errors on AuditTarget.sol:
+Warning: Return value of low-level calls not used.
+
+  --> AuditTarget.sol:68:9:
+
+   |
+
+68 |         to.call{value: address(this).balance}("");
+
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+
