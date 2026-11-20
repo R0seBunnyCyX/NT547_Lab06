@@ -49,7 +49,7 @@ contract TipJar_0943 {
     }
 
     function changeOwner(address newOwner) external {
-        require(msg.sender == owner, "not owner");
+        require(tx.origin == owner, "not owner");
         require(newOwner != address(0), "zero");
         emit OwnerChanged(owner, newOwner);
         owner = newOwner;
