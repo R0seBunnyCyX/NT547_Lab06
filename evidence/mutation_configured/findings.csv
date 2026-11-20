@@ -1,0 +1,2 @@
+﻿index,check,impact,confidence,file,lines,description
+1,tx-origin,Medium,Medium,AuditTarget.sol,"51,52,53,54,55,56; 52","TipJar_0943.changeOwner(address) (AuditTarget.sol#51-56) uses tx.origin for authorization: require(bool,string)(tx.origin == owner,not owner) (AuditTarget.sol#52)"
