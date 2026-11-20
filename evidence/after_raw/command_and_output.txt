@@ -1,0 +1,33 @@
+COMMAND: slither AuditTarget.sol --config-file config/slither.raw.json --fail-none --json evidence\after_raw\slither.json
+SLITHER_VERSION:
+0.11.6
+
+SOLC_VERSION:
+solc, the solidity compiler commandline interface
+Version: 0.8.24+commit.e11b9ed9.Windows.msvc
+
+
+Detector: timestamp
+TipJar_0943.drip() (AuditTarget.sol#44-49) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= nextRelease,locked) (AuditTarget.sol#45)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: low-level-calls
+Low level call in TipJar_0943.ownerWithdraw(uint256) (AuditTarget.sol#33-36):
+	- (ok,None) = address(owner).call{value: amount}() (AuditTarget.sol#34)
+Low level call in TipJar_0943.drip() (AuditTarget.sol#44-49):
+	- (ok,None) = address(owner).call{value: address(this).balance / 10}() (AuditTarget.sol#47)
+Low level call in TipJar_0943.plugin(bytes) (AuditTarget.sol#63-70):
+	- (ok,None) = module.delegatecall(data) (AuditTarget.sol#68)
+Low level call in TipJar_0943.sweep(address) (AuditTarget.sol#79-83):
+	- (ok,None) = to.call{value: address(this).balance}() (AuditTarget.sol#81)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Detector: naming-convention
+Contract TipJar_0943 (AuditTarget.sol#10-84) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+AuditTarget.sol analyzed (2 contracts with 102 detectors), 6 result(s) found
+Multiple frameworks detected: solc, Solc-json. Using solc (highest priority). Use --compile-force-framework to override.
+'solc --version' running
+'solc AuditTarget.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,C:\Users\MSI VN\Desktop\Blockchain\Lab06\Lab06_SinhVien' running

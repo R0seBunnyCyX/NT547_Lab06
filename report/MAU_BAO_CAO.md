@@ -71,11 +71,11 @@
 
 | # | Detector + vị trí | Phân loại | Bằng chứng (đường gọi, quyền, state) | Biện pháp | Sau sửa |
 |---|---|---|---|---|---|
-| 1 | controlled-delegatecall – `plugin` (dòng 55) | **TP** | `external`, không modifier → ai cũng gọi; `target` do caller chọn; delegatecall dùng storage của TipJar → chiếm `owner`, rút ETH. | Fix: thêm `onlyOwner`; bỏ tham số `target`, chỉ delegatecall tới `module` do owner đặt qua `setModule` (onlyOwner, phải là contract). Phần rủi ro còn lại (tin tưởng owner) **accepted** bằng `// slither-disable-next-line controlled-delegatecall` đúng 1 dòng. | ____ (không còn trong configured) |
-| 2 | tx-origin – `changeOwner` (dòng 49) | **TP** | Hàm đổi `owner` — thao tác quyền cao nhất; dùng `tx.origin` nên bị phishing qua contract trung gian. | Fix: `require(msg.sender == owner, "not owner")` + emit `OwnerChanged`. | ____ |
-| 3 | encode-packed-collision – `redeemCode` (dòng 60) | **TP** | Hai tham số `string` động, ai cũng gọi được; id bị trùng giữa các cặp (campaign, code) khác nhau. | Fix: `abi.encode(campaign, code)` (có độ dài/padding). | ____ |
-| 4 | unchecked-lowlevel – `sweep` (dòng 68) | **TP** (mức thấp, chỉ owner) | `onlyOwner`, nhưng kết quả `call` bị bỏ qua → thất bại im lặng. | Fix: `(bool ok, ) = to.call{...}(""); require(ok, "sweep failed");` | ____ |
-| 5 | incorrect-equality – `noFunds` (dòng 38) | **Accepted / contextual** | Hàm `view`, không được hàm nào khác gọi, không dùng để cấp quyền hay chuyển tiền; sai lệch chỉ ảnh hưởng hiển thị. | Accept: `// slither-disable-next-line incorrect-equality` ngay trước `return`, kèm comment lý do. | ____ |
+| 1 | controlled-delegatecall – `plugin` (dòng 55) | **TP** | `external`, không modifier → ai cũng gọi; `target` do caller chọn; delegatecall dùng storage của TipJar → chiếm `owner`, rút ETH. | Fix: thêm `onlyOwner`; bỏ tham số `target`, chỉ delegatecall tới `module` do owner đặt qua `setModule` (onlyOwner, phải là contract). Phần rủi ro còn lại (tin tưởng owner) **accepted** bằng `// slither-disable-next-line controlled-delegatecall` đúng 1 dòng. | Hết (suppression đúng dòng) |
+| 2 | tx-origin – `changeOwner` (dòng 49) | **TP** | Hàm đổi `owner` — thao tác quyền cao nhất; dùng `tx.origin` nên bị phishing qua contract trung gian. | Fix: `require(msg.sender == owner, "not owner")` + emit `OwnerChanged`. | Hết (0 trong raw & configured) |
+| 3 | encode-packed-collision – `redeemCode` (dòng 60) | **TP** | Hai tham số `string` động, ai cũng gọi được; id bị trùng giữa các cặp (campaign, code) khác nhau. | Fix: `abi.encode(campaign, code)` (có độ dài/padding). | Hết (0 trong raw & configured) |
+| 4 | unchecked-lowlevel – `sweep` (dòng 68) | **TP** (mức thấp, chỉ owner) | `onlyOwner`, nhưng kết quả `call` bị bỏ qua → thất bại im lặng. | Fix: `(bool ok, ) = to.call{...}(""); require(ok, "sweep failed");` | Hết (0 trong raw & configured) |
+| 5 | incorrect-equality – `noFunds` (dòng 38) | **Accepted / contextual** | Hàm `view`, không được hàm nào khác gọi, không dùng để cấp quyền hay chuyển tiền; sai lệch chỉ ảnh hưởng hiển thị. | Accept: `// slither-disable-next-line incorrect-equality` ngay trước `return`, kèm comment lý do. | Hết (suppression đúng dòng) |
 | 6 | timestamp – `drip` (dòng 42) | **Accepted / contextual** (Low) | `onlyOwner`; timestamp chỉ dùng cho khoá 1 ngày, độ lệch vài giây của validator không đáng kể; đã cập nhật `nextRelease` trước external call (CEI). | Accept, không sửa code; không suppression (Low, đã bị lọc ở configured). | Còn trong raw (Low) |
 
 Các finding phụ:
@@ -103,15 +103,15 @@ Người gọi: kẻ tấn công bất kỳ → Điều kiện: `plugin` là `ex
 | Chế độ | High | Medium | Low | Informational | Tổng |
 |---|---|---|---|---|---|
 | raw before | 2 | 3 | 2 | 5 | 12 |
-| raw after | ____ | ____ | ____ | ____ | ____ |
+| raw after | 0 | 0 | 1 | 5 | 6 |
 | configured before | 2 | 3 | 0 | 0 | 5 |
-| configured after | ____ | ____ | ____ | ____ | ____ |
+| configured after | 0 | 0 | 0 | 0 | 0 |
 
 ![Scan after raw](../evidence/screenshots/11_scan_after_raw.png)
 
 ![Scan after configured](../evidence/screenshots/12_scan_after_configured.png)
 
-**Cảnh báo còn lại sau sửa (raw):** ____ (dự kiến: `timestamp` Low ở `drip`; `low-level-calls` ×4 và `naming-convention` – Informational) → tất cả đã giải thích ở bảng 2.1, không có High/Medium.
+**Cảnh báo còn lại sau sửa (raw):** 6 finding = 1 Low (`timestamp` ở `drip`) + 5 Informational (4 `low-level-calls` ở `ownerWithdraw`, `drip`, `plugin`, `sweep`; 1 `naming-convention` tên contract) → tất cả đã giải thích ở bảng 2.1, không có High/Medium.
 
 ### 2.5. Lý do của mọi `slither-disable-next-line`
 
@@ -149,7 +149,7 @@ Workflow `.github/workflows/slither.yml`: `crytic/slither-action@v0.4.2`, solc 0
 
 | Phase | Commit SHA | Run URL | Kết quả | Detector khiến RED / lý do GREEN |
 |---|---|---|---|---|
-| Baseline vulnerable | ____ | ____ | RED | ____ (vd: controlled-delegatecall, encode-packed-collision, tx-origin, unchecked-lowlevel, incorrect-equality) |
+| Baseline vulnerable | `5503239b5902aa7f1c2484b4fcde701859e7606a` (5503239) | https://github.com/R0seBunnyCyX/NT547_Lab06/actions/runs/44659758380 | RED | Slither (configured) báo 5 result: controlled-delegatecall, encode-packed-collision (High); incorrect-equality, tx-origin, unchecked-lowlevel (Medium) → vượt ngưỡng `fail-on: medium` |
 | Patched | ____ | ____ | GREEN | Đã sửa 4 TP, 2 finding ngữ cảnh accepted bằng suppression đúng dòng → 0 High/Medium |
 
 ![Push baseline](../evidence/screenshots/07_push_baseline.png)
@@ -207,7 +207,7 @@ Nguyên nhân: detector `tx-origin` của Slither 0.11.6 (`slither/detectors/sta
 
 | # | Phase | SHA | Run URL | Kết quả |
 |---|---|---|---|---|
-| 1 | Baseline | ____ | ____ | RED |
+| 1 | Baseline | 5503239 | https://github.com/R0seBunnyCyX/NT547_Lab06/actions/runs/44659758380 | RED |
 | 2 | Fix | ____ | ____ | GREEN |
 | 3 | Mutation | ____ | ____ | RED |
 | 4 | Revert | ____ | ____ | GREEN |

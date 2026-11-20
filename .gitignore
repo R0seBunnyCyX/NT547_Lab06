@@ -4,3 +4,4 @@ __pycache__/
 slither.db.json
 .env
 submissions/
+.vscode/
