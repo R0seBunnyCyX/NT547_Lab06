@@ -126,9 +126,12 @@ Không dùng `exclude_high`, `exclude_medium`, không tắt cả detector.
 
 ## 3. Nhiệm vụ 3 – Kiến trúc / Inheritance (1,5 điểm)
 
-- Lệnh: `python tools/print_arch.py` (chạy printer `human-summary` và `inheritance-graph` trên `contracts/ArchitectureDemo.sol`, render bằng Graphviz).
+- Lệnh: `python tools/print_arch.py` (chạy printer `human-summary` và `inheritance-graph` trên `contracts/ArchitectureDemo.sol`).
+- Ghi chú sự cố: printer chạy thành công (`printer_log.txt`: `INFO:Printers:Inheritance Graph: contracts/ArchitectureDemo.sol.inheritance-graph.dot`) nhưng script báo "Khong tim thay *.dot" vì nó tìm tên `ArchitectureDemo.sol.dot`, trong khi Slither 0.11.6 xuất `ArchitectureDemo.sol.inheritance-graph.dot`. Đã chuyển file `.dot` vào `evidence/architecture/` và render thủ công theo mục 6 của hướng dẫn: `dot -Tpng evidence/architecture/ArchitectureDemo.sol.inheritance-graph.dot -o evidence/architecture/inheritance.png`.
 
 ![print_arch](../evidence/screenshots/16_print_arch.png)
+
+![Render DOT thủ công](../evidence/screenshots/16b_render_dot.png)
 
 ![Human summary](../evidence/screenshots/17_human_summary.png)
 
@@ -137,7 +140,8 @@ Không dùng `exclude_high`, `exclude_medium`, không tắt cả detector.
 - **Access control** nằm ở `AccessManaged` (biến `admin`, modifier `onlyAdmin`).
 - **Logic số dư** nằm ở `BalanceLedger` (`mapping balances`, `balanceOf`, `_credit`).
 - **Contract triển khai / được gọi từ bên ngoài** là `StudentAsset` (kế thừa cả hai, entrypoint `mint`).
-- Thông tin từ human summary: số hàm ____, ____ (điền vài số liệu nổi bật).
+- Thông tin từ human summary: 3 contract, 23 SLOC, 0 dòng assembly; 0 High / 0 Medium / 0 Low / 0 Informational, 1 Optimization; `StudentAsset` có 4 hàm (gồm hàm kế thừa), không có code phức tạp, không theo chuẩn ERC nào.
+- Đồ thị kế thừa: `StudentAsset` → (1) `AccessManaged` (modifier `onlyAdmin()`, biến public `admin`) và (2) `BalanceLedger` (public `balanceOf(address)`, private/internal `_credit(address,uint256)`, biến `balances`). Thứ tự 1, 2 trên cạnh là thứ tự kế thừa `is AccessManaged, BalanceLedger`.
 
 **Phân tích (3–5 câu):** Logic security-critical nằm ở hai contract cha: `AccessManaged` quyết định ai được phép (`onlyAdmin` dựa trên `msg.sender == admin`) và `BalanceLedger` thay đổi số dư qua hàm internal `_credit`. Entrypoint duy nhất làm thay đổi state là `StudentAsset.mint(to, amount)`, nơi ghép quyền (`onlyAdmin`) với ghi số dư (`_credit`). Audit nên bắt đầu từ `mint` rồi lần theo đồ thị kế thừa lên các contract cha, vì một lỗi ở modifier hay hàm internal của cha sẽ ảnh hưởng mọi contract con mà không hiện rõ khi chỉ đọc contract con. Cần kiểm tra thêm: `admin` được gán đúng trong constructor, không có hàm đổi admin thiếu bảo vệ, và `_credit` không bị gọi từ đường nào khác ngoài `mint`.
 
@@ -150,7 +154,7 @@ Workflow `.github/workflows/slither.yml`: `crytic/slither-action@v0.4.2`, solc 0
 | Phase | Commit SHA | Run URL | Kết quả | Detector khiến RED / lý do GREEN |
 |---|---|---|---|---|
 | Baseline vulnerable | `5503239b5902aa7f1c2484b4fcde701859e7606a` (5503239) | https://github.com/R0seBunnyCyX/NT547_Lab06/actions/runs/44659758380 | RED | Slither (configured) báo 5 result: controlled-delegatecall, encode-packed-collision (High); incorrect-equality, tx-origin, unchecked-lowlevel (Medium) → vượt ngưỡng `fail-on: medium` |
-| Patched | ____ | ____ | GREEN | Đã sửa 4 TP, 2 finding ngữ cảnh accepted bằng suppression đúng dòng → 0 High/Medium |
+| Patched | `607dee358444f77024d5f19ac8c19e6e2ac9f384` (607dee3) | https://github.com/R0seBunnyCyX/NT547_Lab06/actions/runs/44662693268 | GREEN | Đã sửa 4 TP, 2 finding ngữ cảnh accepted bằng suppression đúng dòng → 0 High/Medium |
 
 ![Push baseline](../evidence/screenshots/07_push_baseline.png)
 
@@ -208,7 +212,7 @@ Nguyên nhân: detector `tx-origin` của Slither 0.11.6 (`slither/detectors/sta
 | # | Phase | SHA | Run URL | Kết quả |
 |---|---|---|---|---|
 | 1 | Baseline | 5503239 | https://github.com/R0seBunnyCyX/NT547_Lab06/actions/runs/44659758380 | RED |
-| 2 | Fix | ____ | ____ | GREEN |
+| 2 | Fix | 607dee3 | https://github.com/R0seBunnyCyX/NT547_Lab06/actions/runs/44662693268 | GREEN |
 | 3 | Mutation | ____ | ____ | RED |
 | 4 | Revert | ____ | ____ | GREEN |
 
